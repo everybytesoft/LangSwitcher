@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode development"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.6.0",
+    "@tauri-apps/cli": "^2.0.1",
+    "classnames": "^2.5.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tauri": "^0.15.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.4",
+    "@babel/preset-react": "^7.24.1",
+    "babel-loader": "^9.1.3",
+    "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^7.1.1",
+    "mini-css-extract-plugin": "^2.9.0",
+    "path": "^0.12.7",
+    "sass": "^1.75.0",
+    "sass-loader": "^16.0.2",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
+  }
+}
