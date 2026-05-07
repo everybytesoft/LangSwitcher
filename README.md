@@ -14,6 +14,8 @@
 2.	Особенности:
 Работает в любом поле ввода: текстовые файлы, браузерные строки поиска и т.д.
 Поддерживает переключение между русским и английским алфавитом.
+
+P.S Работает на Windows10
 -------------------
 
 The programme provides a convenient way to switch between Russian and English keyboard layouts in any text input field.
@@ -31,5 +33,4 @@ The programme will automatically replace the text characters with the correspond
 Works in any input field: text files, browser search bars, etc.
 Supports switching between the Russian and English alphabets.
 
-
-Translated with DeepL.com (free version)
+P.S. Works on Windows 10
