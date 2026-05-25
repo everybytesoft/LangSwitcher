@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use clipboard::{ClipboardContext, ClipboardProvider};
+use arboard::Clipboard;
 use rdev::{listen, simulate, Event, EventType, Key, SimulateError};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -83,7 +83,6 @@ fn convert(text: String) -> String {
         ('v', 'м'),
         ('b', 'и'),
         ('n', 'т'),
-        ('m', 'ь'),
         (',', 'б'),
         ('.', 'ю'),
         ('/', '.'),
@@ -108,12 +107,9 @@ fn convert(text: String) -> String {
         &reverse_map
     };
 
-    let result: String = text
-        .chars()
+    text.chars()
         .map(|c| *map_to_use.get(&c).unwrap_or(&c))
-        .collect();
-
-    result.into()
+        .collect()
 }
 
 fn main() {
@@ -132,7 +128,9 @@ fn main() {
         if let Err(error) = listen(move |event| {
             handle_event(event, state_clone.clone());
         }) {
-            println!("Error: {:?}", error);
+            println!("rdev error: {:?}", error);
+            #[cfg(target_os = "macos")]
+            println!("На macOS необходимо разрешить доступ к специальным возможностям: Системные настройки → Конфиденциальность и безопасность → Универсальный доступ");
         }
     });
 
@@ -192,6 +190,7 @@ struct State {
     meta_left_pressed: bool,
     alpha_pressed: bool,
 }
+
 fn handle_event(event: Event, state: Arc<Mutex<State>>) {
     let mut state = state.lock().unwrap();
     match event.event_type {
@@ -220,7 +219,7 @@ fn handle_event(event: Event, state: Arc<Mutex<State>>) {
                         match simulate(event_type) {
                             Ok(()) => (),
                             Err(SimulateError) => {
-                                println!("We could not send {:?}", event_type);
+                                println!("Could not send {:?}", event_type);
                             }
                         }
                         thread::sleep(delay);
@@ -241,23 +240,44 @@ fn handle_event(event: Event, state: Arc<Mutex<State>>) {
                         Err(err) => println!("Error: {}", err),
                     }
 
-                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                    let old_val = ctx.get_contents().unwrap();
+                    // На macOS копирование — Cmd+C, на Windows/Linux — Ctrl+C
+                    #[cfg(target_os = "macos")]
+                    let copy_mod = Key::MetaLeft;
+                    #[cfg(not(target_os = "macos"))]
+                    let copy_mod = Key::ControlLeft;
 
-                    send(&EventType::KeyPress(Key::ControlLeft));
+                    let mut clipboard = match Clipboard::new() {
+                        Ok(c) => c,
+                        Err(e) => {
+                            println!("Clipboard init error: {:?}", e);
+                            return;
+                        }
+                    };
+
+                    let old_val = clipboard.get_text().unwrap_or_default();
+
+                    send(&EventType::KeyPress(copy_mod));
                     send(&EventType::KeyPress(Key::KeyC));
-                    send(&EventType::KeyRelease(Key::ControlLeft));
+                    send(&EventType::KeyRelease(copy_mod));
                     send(&EventType::KeyRelease(Key::KeyC));
 
-                    let new_val = ctx.get_contents().unwrap();
-                    ctx.set_contents(convert(new_val)).unwrap();
+                    // Ждём, пока буфер обмена обновится после копирования
+                    thread::sleep(time::Duration::from_millis(100));
 
-                    send(&EventType::KeyPress(Key::ControlLeft));
+                    let new_val = clipboard.get_text().unwrap_or_default();
+                    if let Err(e) = clipboard.set_text(convert(new_val)) {
+                        println!("Clipboard set error: {:?}", e);
+                        return;
+                    }
+
+                    send(&EventType::KeyPress(copy_mod));
                     send(&EventType::KeyPress(Key::KeyV));
-                    send(&EventType::KeyRelease(Key::ControlLeft));
+                    send(&EventType::KeyRelease(copy_mod));
                     send(&EventType::KeyRelease(Key::KeyV));
 
-                    ctx.set_contents(convert(old_val)).unwrap();
+                    if let Err(e) = clipboard.set_text(old_val) {
+                        println!("Clipboard restore error: {:?}", e);
+                    }
                 });
             }
         }
