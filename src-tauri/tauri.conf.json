@@ -20,6 +20,9 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "os": {
+        "all": true
       }
     },
     "windows": [
@@ -37,7 +40,7 @@
       "active": true,
       "targets": "all",
       "identifier": "com.langswitcher.app",
-      "icon": ["icons/256x256.png", "icons/icon.ico", "icons/icon.svg"]
+      "icon": ["icons/icon.icns", "icons/256x256.png", "icons/icon.ico", "icons/icon.svg"]
     }
   }
 }
